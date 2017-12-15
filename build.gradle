@@ -1,14 +1,78 @@
-group 'com.xiaoyue26.spc'
-version '1.0-SNAPSHOT'
-
-apply plugin: 'java'
-
-sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
+allprojects {
+    task allTask << {
+        println project.name
+    }
 }
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+subprojects {
+    group 'com.xiaoyue26.spc'
+    version '1.0-SNAPSHOT'
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    repositories {
+        mavenLocal()
+        maven { url 'http://repo1.maven.org/maven2' }//自定义maven仓库地址
+        maven { url 'http://conjars.org/repo' }//自定义maven仓库地址
+        jcenter()//新的中央远程仓库，兼容maven中心仓库
+        mavenCentral()
+        maven { url 'http://maven.zhenguanyu.com/content/repositories/releases/'}
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs = ['src/main/java']
+            }
+        }
+        test {
+
+            java {
+                srcDirs = ['src/test/java']
+            }
+        }
+    }
+    task createDirs << { // 运行缩写: gradle cDirs
+        sourceSets*.java.srcDirs*.each { it.mkdirs() }
+        sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+    }
+
+
+
+    buildscript {
+        ext {
+            springBootVersion = '1.5.9.RELEASE'
+        }
+        repositories {
+            maven {
+                url "https://plugins.gradle.org/m2/"
+            }
+        }
+        dependencies {
+            classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        }
+    }
+
+
+    task subTask << {
+        println project.name
+    }
+}
+
+project(':server') {
+    // 两种调用方法:
+    // 方法1: 查找所有项目中的forProject1 task
+    // gradle forProject1
+    // 方法2: 调用指定子项目中的task
+    // gradle :sub-project1:forProject1
+    task forProject1 << {
+        println 'for project 1'
+    }
+}
+
+
+configure(allprojects.findAll { it.name.contains('server') or it.name.equals('client') }) {
+    subTask << {
+        println 'this is a sub project'
+    }
 }
